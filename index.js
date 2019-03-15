@@ -64,7 +64,7 @@ async function run() {
    
     //Собераем все карточки на странице
     for (let auctionsItem of auctionsItems) {
-     
+      const lotNumberParsed = await doStringToNumber(".list-group .anotation-item .info-item .number-item span", auctionsItem);
 
       //Проверка
       const auctionsItemCandidate = await AuctionsItem.findOne({lotNumber: lotNumberParsed});
@@ -79,7 +79,7 @@ async function run() {
         if (auctionsItemCandidate.region === regionParsed) {
           await AuctionsItem.findOneAndUpdate(
             {_id: auctionsItemCandidate._id},
-            {changes: {region: 'auctionsItemCandidate.region'}},
+            {changes: {region: 'maks'}},
             {new: true, upsert: true},
             (err, result) => console.log("Changes result", result)
           );
@@ -109,7 +109,7 @@ async function run() {
         const nameParsed = await doStringWithoutSpaces(".list-group .title-item a h3", auctionsItem);
         const lotReferenceParsed = await auctionsItem.$eval(".list-group .title-item a", node => node.href);
         const regionParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .region-item span", auctionsItem);
-        const lotNumberParsed = await doStringToNumber(".list-group .anotation-item .info-item .number-item span", auctionsItem);
+      
         const startingPriceParsed = await doStringToNumber(".list-group .anotation-item .info-item .start-price-item span span", auctionsItem);
         const guaranteeFeeParsed = await doStringToNumber(".list-group .anotation-item .info-item .payment-item span span", auctionsItem);
         const auctionStatusParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .condition-item span", auctionsItem);
