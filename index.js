@@ -64,7 +64,15 @@ async function run() {
    
     //Собераем все карточки на странице
     for (let auctionsItem of auctionsItems) {
+      
+      const nameParsed = await doStringWithoutSpaces(".list-group .title-item a h3", auctionsItem);
+      const lotReferenceParsed = await auctionsItem.$eval(".list-group .title-item a", node => node.href);
+      const regionParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .region-item span", auctionsItem);
       const lotNumberParsed = await doStringToNumber(".list-group .anotation-item .info-item .number-item span", auctionsItem);
+      const startingPriceParsed = await doStringToNumber(".list-group .anotation-item .info-item .start-price-item span span", auctionsItem);
+      const guaranteeFeeParsed = await doStringToNumber(".list-group .anotation-item .info-item .payment-item span span", auctionsItem);
+      const auctionStatusParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .condition-item span", auctionsItem);
+      const startDateParsed = await doISOString( await doStringWithoutSpaces(".list-group .anotation-item .info-item-date div span", auctionsItem)); 
 
       //Проверка
       const auctionsItemCandidate = await AuctionsItem.findOne({lotNumber: lotNumberParsed});
@@ -106,14 +114,7 @@ async function run() {
         console.log(`\n//////Создаю///${auctionsItemCandidate}\n`);
         const auctionItem = new AuctionsItem();
 
-        const nameParsed = await doStringWithoutSpaces(".list-group .title-item a h3", auctionsItem);
-        const lotReferenceParsed = await auctionsItem.$eval(".list-group .title-item a", node => node.href);
-        const regionParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .region-item span", auctionsItem);
       
-        const startingPriceParsed = await doStringToNumber(".list-group .anotation-item .info-item .start-price-item span span", auctionsItem);
-        const guaranteeFeeParsed = await doStringToNumber(".list-group .anotation-item .info-item .payment-item span span", auctionsItem);
-        const auctionStatusParsed = await doStringWithoutSpaces(".list-group .anotation-item .info-item .condition-item span", auctionsItem);
-        const startDateParsed = await doISOString( await doStringWithoutSpaces(".list-group .anotation-item .info-item-date div span", auctionsItem)); 
 
         //Забиваем все в базу
         auctionItem.name = nameParsed;
