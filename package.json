@@ -1,0 +1,19 @@
+{
+  "name": "puppeteer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "moment": "^2.24.0",
+    "mongoose": "^5.4.19",
+    "puppeteer": "^1.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.10"
+  },
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "Kondratenko Maks",
+  "license": "ISC"
+}
