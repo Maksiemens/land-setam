@@ -207,17 +207,14 @@ async function run() {
           auctionItem.listOfParticipants = listOfParticipantsParsed;
     
           await auctionItem.save().then(item => console.log("Сохранили обьект в базу\n\n".toUpperCase(), item));
-        }
-        
-        catch (error) {
+
+        } catch (error) {
 
           if (error instanceof TimeoutError) {
             console.log('\nTimeoutError ===>', auctionsItemLink);
-            await pageSecond.reload(auctionsItemLink, {
-              waitUntil: ['networkidle0', 'domcontentloaded']
-              // timeout: 30000
-            });
+            await pageSecond.reload(auctionsItemLink, { timeout: 0 });
           }
+          
         }
       }
     }
