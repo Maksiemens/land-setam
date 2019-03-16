@@ -109,7 +109,7 @@ async function run() {
       }
       else {
         //Если карточки нет, создаем новую
-        console.log(`\n//////Создаю///${auctionsItemCandidate}\n`);
+        console.log("\n//////Создаю новую карточку для базы///\n");
 
         const auctionItem = new AuctionsItem();    
 
@@ -125,7 +125,7 @@ async function run() {
 
         //Ссылка по которой заходим в карточку
         const auctionsItemLink = await auctionsItem.$eval("#upcoming .list-group .title-item a", node => node.href);
-        console.log("Ссылка карточки по которой мы перешли", auctionsItemLink);
+        console.log("Ссылка карточки по которой мы перешли =>>>>>", auctionsItemLink);
 
         await pageSecond.bringToFront();
 
@@ -148,11 +148,9 @@ async function run() {
         auctionItem.locationOfProperty = locationOfPropertyParsed;
         auctionItem.dateOfPublication = dateOfPublicationParsed;
 
-        // console.log("\n\nТеперь обьект такой\n\n", auctionItem);
-
         //Табы в карточке
         // Первый таб, он открт по умолчанию
-        console.log("\nСобераем первый таб\n\n");
+        console.log("Собераем первый таб\n");
         await pageSecond.waitFor( await randomDelay() );
         const cadastralNumberOfTheLandPlotParsed = await doStringWithoutSpaces("#Feature-lot div:nth-child(1) .lot-edit-box a", pageSecond);
         const cadastralNumberOfTheLandPlotUrlParsed = await pageSecond.$eval("#Feature-lot div:nth-child(1) .lot-edit-box a", node => node.href);
@@ -176,67 +174,47 @@ async function run() {
         auctionItem.normativeMonetaryValuationOfLand = normativeMonetaryValuationOfLandParsed;
         auctionItem.costsOfLotPreparation = costsOfLotPreparationParsed;
         auctionItem.detailsForPaymentOfGuaranteeFee = detailsForPaymentOfGuaranteeFeeParsed;
-        // console.log("\nСобрали первый таб\n", auctionItem);
-
+ 
         // Второй таб
-        // await pageSecond.waitFor( await randomDelay() );
+        console.log("Собераем второй таб\n");
         await pageSecond.focus('a[href="#additional-nformation"]');
         await pageSecond.click('a[href="#additional-nformation"]');
-        // await pageSecond.waitFor( await randomDelay() );
-        console.log("\nСобераем второй таб\n");
-
+  
         const сategoryParsed = await doStringWithoutSpaces("#additional-nformation", pageSecond);
-        // console.log("\nсategoryParsed\n", сategoryParsed);
 
         //Забиваем все в базу
         auctionItem.сategory = сategoryParsed.substring(42);
-        // console.log("\nСобрали второй таб\n", auctionItem);
-
+ 
         // Третий таб
-        // await pageSecond.waitFor( await randomDelay() );
+        console.log("Собераем третий таб\n");
         await pageSecond.focus('a[href="#include"]');
         await pageSecond.click('a[href="#include"]');
-        // await pageSecond.waitFor( await randomDelay() );
-
-        console.log("\nСобераем третий таб\n");
+ 
         const downloadFileUrlParsed = await pageSecond.$eval("#include > div > a.download", node => node.href);
 
         //Забиваем все в базу
         auctionItem.downloadFileUrl = downloadFileUrlParsed;
-        // console.log("\nСобрали третий таб\n", auctionItem);
-
+  
         // Четвертый таб
-        // await pageSecond.waitFor( await randomDelay() );
+        console.log("Собераем четвертый таб\n");
         await pageSecond.focus('a[href="#application"]');
         await pageSecond.click('a[href="#application"]');
-        // await pageSecond.waitFor( await randomDelay() );
       
         const listOfParticipantsParsed = await pageSecond.$$eval("#application ul li", nodes => nodes.length);
-        // console.log("\nlistOfParticipantsParsed\n", listOfParticipantsParsed);
-        console.log("\nСобераем четвертый таб\n");
 
         //Забиваем все в базу
         auctionItem.listOfParticipants = listOfParticipantsParsed;
-
-        // console.log("\nСобрали четвертый таб\n", auctionItem);
    
         await auctionItem.save().then(item => console.log("\n\nСохранили обьект в базу\n\n".toUpperCase(), item));
-
-        // await pageSecond.waitFor( await randomDelay() );
-        // await pageFirst.bringToFront();
       }
     }
 
     if (i < siteTotalPages) {
-      // await pageFirst.bringToFront();
       await pageFirst.click(`a[href="/zemlya/page/${++j}"]`);
     }
   }
 
-
-
-  // await browser.close();
-
+  await browser.close();
 
   console.log(`\n////////// Browser closed! //////////\n\n`);
 }
