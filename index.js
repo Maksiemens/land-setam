@@ -48,7 +48,7 @@ async function run() {
 
   //Количество страниц сайте которые будем парсить по очереди или последняя доступная страница на сайте
   const siteTotalPages = await pageFirst.$eval("#upcoming .pagination-box ul li:nth-child(8) a", node => parseInt(node.textContent));
-  console.log("siteTotalPages ===>", siteTotalPages);
+  console.log(`Сколько страниц всего на сайте с карточками ===> ${siteTotalPages} \n`);
 
   //Начинаем ходить по страницам
   for (let i = 1, j = 1; i <= siteTotalPages; i++) {
@@ -58,7 +58,7 @@ async function run() {
 
     //Массив карточек на странице по которым мы будем ходить
     const auctionsItems = await pageFirst.$$("#upcoming .list-group .auctions-item");
-   
+  
     //Ходим по каждой карточке и собераем инфу
     for (let auctionsItem of auctionsItems) {
 
@@ -122,90 +122,103 @@ async function run() {
         auctionItem.guaranteeFee = guaranteeFeeParsed;
         auctionItem.auctionStatus = auctionStatusParsed;
         auctionItem.startDate = startDateParsed;
-
+        
         //Ссылка по которой заходим в карточку
         const auctionsItemLink = await auctionsItem.$eval("#upcoming .list-group .title-item a", node => node.href);
-        console.log("Ссылка карточки по которой мы перешли =>>>>>", auctionsItemLink);
+        console.log(`Ссылка карточки по которой мы перешли =>>>>> ${auctionsItemLink} \n`);
 
         await pageSecond.bringToFront();
+        
+        try {
+          await pageSecond.goto(auctionsItemLink, {timeout: 0});
+       
+          await pageSecond.waitFor( await randomDelay() );
+        
+          const dateOfAuctionParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(3) span", pageSecond));
+          const endDateOfBiddingParsed = await doISOString( await doStringWithoutSpaces("#auctionDateEnd", pageSecond));
+          const endDateForSubmissionOfApplicationsParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(5) span", pageSecond));
+          const stepOfAuctionParsed = await doStringToNumber("#main-inner .panel-body .first-box .info-box div:nth-child(8) span span", pageSecond);
+          const locationOfPropertyParsed = await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(10) span", pageSecond)
+          const dateOfPublicationParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(11) span", pageSecond));
 
-        await pageSecond.goto(auctionsItemLink, {timeout: 0});
+          //Забиваем все в базу
+          auctionItem.dateOfAuction = dateOfAuctionParsed;
+          auctionItem.endDateOfBidding = endDateOfBiddingParsed;
+          auctionItem.endDateForSubmissionOfApplications = endDateForSubmissionOfApplicationsParsed;
+          auctionItem.stepOfAuction = stepOfAuctionParsed;
+          auctionItem.locationOfProperty = locationOfPropertyParsed;
+          auctionItem.dateOfPublication = dateOfPublicationParsed;
 
-        await pageSecond.waitFor( await randomDelay() );
-      
-        const dateOfAuctionParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(3) span", pageSecond));
-        const endDateOfBiddingParsed = await doISOString( await doStringWithoutSpaces("#auctionDateEnd", pageSecond));
-        const endDateForSubmissionOfApplicationsParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(5) span", pageSecond));
-        const stepOfAuctionParsed = await doStringToNumber("#main-inner .panel-body .first-box .info-box div:nth-child(8) span span", pageSecond);
-        const locationOfPropertyParsed = await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(10) span", pageSecond)
-        const dateOfPublicationParsed = await doISOString( await doStringWithoutSpaces("#main-inner .panel-body .first-box .info-box div:nth-child(11) span", pageSecond));
+          //Табы в карточке
+          // Первый таб, он открт по умолчанию
+          console.log("Собераем первый таб\n");
+          await pageSecond.waitFor( await randomDelay() );
+          const cadastralNumberOfTheLandPlotParsed = await doStringWithoutSpaces("#Feature-lot div:nth-child(1) .lot-edit-box a", pageSecond);
+          const cadastralNumberOfTheLandPlotUrlParsed = await pageSecond.$eval("#Feature-lot div:nth-child(1) .lot-edit-box a", node => node.href);
+          const targetPurposeOfTheLandPlotParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(2) > span.user-field-value.lot-edit-box", pageSecond);
+          const townNeedsParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(3) > span.user-field-value.lot-edit-box", pageSecond);
+          const typeOfContractParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(4) > span.user-field-value.lot-edit-box", pageSecond);
+          const termsOfContractParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(5) > span.user-field-value.lot-edit-box", pageSecond);
+          const landAreaParsed = await doStringToNumber("#Feature-lot > div:nth-child(6) > span.user-field-value.lot-edit-box", pageSecond);
+          const normativeMonetaryValuationOfLandParsed = await doStringToNumber("#Feature-lot > div:nth-child(7) > span.user-field-value.lot-edit-box", pageSecond);
+          const costsOfLotPreparationParsed = await doStringToNumber("#Feature-lot > div:nth-child(8) > span.user-field-value.lot-edit-box", pageSecond);
+          const detailsForPaymentOfGuaranteeFeeParsed = await doStringWithoutSpaces("#Feature-lot > p.m-t", pageSecond);
 
-        //Забиваем все в базу
-        auctionItem.dateOfAuction = dateOfAuctionParsed;
-        auctionItem.endDateOfBidding = endDateOfBiddingParsed;
-        auctionItem.endDateForSubmissionOfApplications = endDateForSubmissionOfApplicationsParsed;
-        auctionItem.stepOfAuction = stepOfAuctionParsed;
-        auctionItem.locationOfProperty = locationOfPropertyParsed;
-        auctionItem.dateOfPublication = dateOfPublicationParsed;
-
-        //Табы в карточке
-        // Первый таб, он открт по умолчанию
-        console.log("Собераем первый таб\n");
-        await pageSecond.waitFor( await randomDelay() );
-        const cadastralNumberOfTheLandPlotParsed = await doStringWithoutSpaces("#Feature-lot div:nth-child(1) .lot-edit-box a", pageSecond);
-        const cadastralNumberOfTheLandPlotUrlParsed = await pageSecond.$eval("#Feature-lot div:nth-child(1) .lot-edit-box a", node => node.href);
-        const targetPurposeOfTheLandPlotParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(2) > span.user-field-value.lot-edit-box", pageSecond);
-        const townNeedsParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(3) > span.user-field-value.lot-edit-box", pageSecond);
-        const typeOfContractParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(4) > span.user-field-value.lot-edit-box", pageSecond);
-        const termsOfContractParsed = await doStringWithoutSpaces("#Feature-lot > div:nth-child(5) > span.user-field-value.lot-edit-box", pageSecond);
-        const landAreaParsed = await doStringToNumber("#Feature-lot > div:nth-child(6) > span.user-field-value.lot-edit-box", pageSecond);
-        const normativeMonetaryValuationOfLandParsed = await doStringToNumber("#Feature-lot > div:nth-child(7) > span.user-field-value.lot-edit-box", pageSecond);
-        const costsOfLotPreparationParsed = await doStringToNumber("#Feature-lot > div:nth-child(8) > span.user-field-value.lot-edit-box", pageSecond);
-        const detailsForPaymentOfGuaranteeFeeParsed = await doStringWithoutSpaces("#Feature-lot > p.m-t", pageSecond);
-
-        //Забиваем все в базу
-        auctionItem.cadastralNumberOfTheLandPlot = cadastralNumberOfTheLandPlotParsed;
-        auctionItem.cadastralNumberOfTheLandPlotUrl = cadastralNumberOfTheLandPlotUrlParsed;
-        auctionItem.targetPurposeOfTheLandPlot = targetPurposeOfTheLandPlotParsed;
-        auctionItem.townNeeds = townNeedsParsed;
-        auctionItem.typeOfContract = typeOfContractParsed;
-        auctionItem.termsOfContract = termsOfContractParsed;
-        auctionItem.landArea = landAreaParsed;
-        auctionItem.normativeMonetaryValuationOfLand = normativeMonetaryValuationOfLandParsed;
-        auctionItem.costsOfLotPreparation = costsOfLotPreparationParsed;
-        auctionItem.detailsForPaymentOfGuaranteeFee = detailsForPaymentOfGuaranteeFeeParsed;
- 
-        // Второй таб
-        console.log("Собераем второй таб\n");
-        await pageSecond.focus('a[href="#additional-nformation"]');
-        await pageSecond.click('a[href="#additional-nformation"]');
+          //Забиваем все в базу
+          auctionItem.cadastralNumberOfTheLandPlot = cadastralNumberOfTheLandPlotParsed;
+          auctionItem.cadastralNumberOfTheLandPlotUrl = cadastralNumberOfTheLandPlotUrlParsed;
+          auctionItem.targetPurposeOfTheLandPlot = targetPurposeOfTheLandPlotParsed;
+          auctionItem.townNeeds = townNeedsParsed;
+          auctionItem.typeOfContract = typeOfContractParsed;
+          auctionItem.termsOfContract = termsOfContractParsed;
+          auctionItem.landArea = landAreaParsed;
+          auctionItem.normativeMonetaryValuationOfLand = normativeMonetaryValuationOfLandParsed;
+          auctionItem.costsOfLotPreparation = costsOfLotPreparationParsed;
+          auctionItem.detailsForPaymentOfGuaranteeFee = detailsForPaymentOfGuaranteeFeeParsed;
   
-        const сategoryParsed = await doStringWithoutSpaces("#additional-nformation", pageSecond);
+          // Второй таб
+          console.log("Собераем второй таб\n");
+          await pageSecond.focus('a[href="#additional-nformation"]');
+          await pageSecond.click('a[href="#additional-nformation"]');
+    
+          const сategoryParsed = await doStringWithoutSpaces("#additional-nformation", pageSecond);
 
-        //Забиваем все в базу
-        auctionItem.сategory = сategoryParsed.substring(42);
- 
-        // Третий таб
-        console.log("Собераем третий таб\n");
-        await pageSecond.focus('a[href="#include"]');
-        await pageSecond.click('a[href="#include"]');
- 
-        const downloadFileUrlParsed = await pageSecond.$eval("#include > div > a.download", node => node.href);
-
-        //Забиваем все в базу
-        auctionItem.downloadFileUrl = downloadFileUrlParsed;
+          //Забиваем все в базу
+          auctionItem.сategory = сategoryParsed.substring(42);
   
-        // Четвертый таб
-        console.log("Собераем четвертый таб\n");
-        await pageSecond.focus('a[href="#application"]');
-        await pageSecond.click('a[href="#application"]');
-      
-        const listOfParticipantsParsed = await pageSecond.$$eval("#application ul li", nodes => nodes.length);
+          // Третий таб
+          console.log("Собераем третий таб\n");
+          await pageSecond.focus('a[href="#include"]');
+          await pageSecond.click('a[href="#include"]');
+  
+          const downloadFileUrlParsed = await pageSecond.$eval("#include > div > a.download", node => node.href);
 
-        //Забиваем все в базу
-        auctionItem.listOfParticipants = listOfParticipantsParsed;
-   
-        await auctionItem.save().then(item => console.log("\n\nСохранили обьект в базу\n\n".toUpperCase(), item));
+          //Забиваем все в базу
+          auctionItem.downloadFileUrl = downloadFileUrlParsed;
+    
+          // Четвертый таб
+          console.log("Собераем четвертый таб\n");
+          await pageSecond.focus('a[href="#application"]');
+          await pageSecond.click('a[href="#application"]');
+        
+          const listOfParticipantsParsed = await pageSecond.$$eval("#application ul li", nodes => nodes.length);
+
+          //Забиваем все в базу
+          auctionItem.listOfParticipants = listOfParticipantsParsed;
+    
+          await auctionItem.save().then(item => console.log("Сохранили обьект в базу\n\n".toUpperCase(), item));
+        }
+        
+        catch (error) {
+
+          if (error instanceof TimeoutError) {
+            console.log('\nTimeoutError ===>', auctionsItemLink);
+            await pageSecond.reload(auctionsItemLink, {
+              waitUntil: ['networkidle0', 'domcontentloaded']
+              // timeout: 30000
+            });
+          }
+        }
       }
     }
 
